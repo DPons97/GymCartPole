@@ -33,8 +33,8 @@ env = TransformObservation(env, lambda obs: (mu.round_to(obs[0], 0.1), mu.round_
 # 1 - right
 action_space = [0, 1]
 
-alpha = 0.5     # Learning rate
-gamma = 0.5       # Discount factor
+alpha = 0.01     # Learning rate
+gamma = 1       # Discount factor
 
 # Policy and Q-table 
 state_space_shape = (94, 48, 2)
@@ -44,20 +44,30 @@ q_table = sa.ScaledNDArray(state_space_shape, state_space_scale)
 
 prev_obs, info = env.reset()
 action = env.action_space.sample()
-for _ in range(1000):
+for _ in range(10000):
     curr_obs, reward, term, trunc, info = env.step(action)
     print("New observation: " + str(curr_obs))
     print("Reward: " + str(reward))
 
+    if (term):
+        # Update policy with negative reward
+        reward = -1
+
     new_q_value = update_q_value(q_table=q_table, prev_state=prev_obs, action=action, curr_state=curr_obs, reward=reward, alpha=alpha, gamma=gamma)
     print("New q value for " + str(prev_obs + (action,)) + " = " + str(new_q_value))
-
-    prev_obs = curr_obs
-    action = choose_next_action(q_table, curr_obs)
-    print("Next action will be: " + "L" if 0 else "R")
     
     if (term):
-        # todo Update policy with negative reward?
-        env.reset()
+        prev_obs, info = env.reset()
+        action = env.action_space.sample()
+        print("Episode terminated. Next action will be random.")
+    else:
+        prev_obs = curr_obs
+        action = choose_next_action(q_table, curr_obs)
+
+        # Let's add a bit of exploration...
+        if rand.randint(1, 100) <= 10:
+            action = env.action_space.sample()
+
+        print("Next action will be: " + ("L" if action==0 else "R"))
 
 quit()
