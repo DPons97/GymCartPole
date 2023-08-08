@@ -9,9 +9,9 @@ import math_utils as mu
 import scaled_ndarray as sa
 
 # Globals
-N_ITERATIONS = 500     # Number of iterations (simulations)
+N_ITERATIONS = 2000     # Number of iterations (simulations)
 ALPHA = 0.1             # Learning rate
-GAMMA = 0.75            # Discount factor
+GAMMA = 0.6             # Discount factor
 EPS = 0.995             # Epsilon-greedy starting randomness
 
 '''
@@ -39,7 +39,7 @@ def next_action_epsilon_greedy(q_table, curr_state, epsilon):
         return np.argmax(curr_q)
 
 # Initialize the environment
-env = gym.make("CartPole-v1", render_mode = "human")
+env = gym.make("CartPole-v1")#, render_mode = "human")
 
 # Transforming observation so that:
 # Position: 2.3344 -> 2.3, steps of 0.1 [-0.1, 0, 0.1, 0.2, 0.3, ...]
@@ -58,11 +58,11 @@ scores = np.zeros(N_ITERATIONS)
 prev_obs, info = env.reset()
 action = env.action_space.sample()
 curr_score = 0
+eps = EPS
 for i in range(N_ITERATIONS):
     curr_obs, reward, term, trunc, info = env.step(action)
     curr_score += reward
     print("New observation: " + str(curr_obs))
-    # print("Reward: " + str(reward))
 
     #if (term):
         # Update policy with negative reward
@@ -75,7 +75,7 @@ for i in range(N_ITERATIONS):
         scores[i] = curr_score
         curr_score = 0
         prev_obs, info = env.reset()
-        EPS *= EPS
+        eps *= EPS 
         print("Episode terminated! Starting " + str(i+1) + "th iteration...")
         print("New probability to make a random move: " + str(EPS))
     else:
@@ -85,9 +85,22 @@ for i in range(N_ITERATIONS):
     print("Next action will be: " + ("L" if action==0 else "R"))
 
 # Show stats
-plt.plot(range(0, N_ITERATIONS), scores)
-plt.xlabel('Iteration')
-plt.ylabel('Cumulative Reward')
+fig, ax1 = plt.subplots()
+
+color = 'tab:blue'
+ax1.set_xlabel('Iteration')
+ax1.set_ylabel('Cumulative Reward')
+ax1.plot(range(0, N_ITERATIONS), scores, color)
+ax1.tick_params(axis='y')
+
+ax2 = ax1.twinx()
+
+color = 'tab:red'
+ax2.set_ylabel('Randomness (%)')
+ax2.plot(range(0, N_ITERATIONS), [pow(EPS, i)  for i in range(0, N_ITERATIONS)], color=color)
+ax2.tick_params(axis='y')
+
+fig.tight_layout()
 plt.show()
 
 quit()
