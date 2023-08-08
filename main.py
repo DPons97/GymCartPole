@@ -3,12 +3,13 @@ from gymnasium.wrappers import TransformObservation
 import math
 import random as rand
 import numpy as np
+import matplotlib.pyplot as plt
 
 import math_utils as mu
 import scaled_ndarray as sa
 
 # Globals
-N_ITERATIONS = 2000     # Number of iterations (simulations)
+N_ITERATIONS = 500     # Number of iterations (simulations)
 ALPHA = 0.1             # Learning rate
 GAMMA = 0.75            # Discount factor
 EPS = 0.995             # Epsilon-greedy starting randomness
@@ -45,23 +46,23 @@ env = gym.make("CartPole-v1", render_mode = "human")
 # Cart Velocity ignored for now
 # Pole Angle: 0.1254 -> 0.1221 steps of (1 deg_to_rad) [-0.017, 0, 0.017, 0.034, ...]
 # Pole angular Velocity ignored for now
-env = TransformObservation(env, lambda obs: (mu.round_to(obs[0], 0.1), mu.round_to(obs[2], math.radians(1), 4)))
+env = TransformObservation(env, lambda obs: (mu.round_to(obs[0], 0.1), mu.round_to(obs[1], 0.1, 1), mu.round_to(obs[2], math.radians(1), 4), mu.round_to(obs[3], 0.1, 1)))
 
 # Policy and Q-table 
-state_space_shape = (94, 48, 2)
-state_space_scale = (0.1, math.radians(1), 1)
+state_space_shape = (94, 50, 48, 100, 2)
+state_space_scale = (0.1, 0.1, math.radians(1), 0.1, 1)
 # cart_policy = sa.ScaledNDArray(state_space_shape, state_space_scale)
 q_table = sa.ScaledNDArray(state_space_shape, state_space_scale)
-best_score = (0, EPS)   # (score, randomness)
+scores = np.zeros(N_ITERATIONS)
 
 prev_obs, info = env.reset()
 action = env.action_space.sample()
 curr_score = 0
-for _ in range(N_ITERATIONS):
+for i in range(N_ITERATIONS):
     curr_obs, reward, term, trunc, info = env.step(action)
     curr_score += reward
     print("New observation: " + str(curr_obs))
-    print("Reward: " + str(reward))
+    # print("Reward: " + str(reward))
 
     #if (term):
         # Update policy with negative reward
@@ -71,14 +72,11 @@ for _ in range(N_ITERATIONS):
     print("New q value for " + str(prev_obs + (action,)) + " = " + str(new_q_value))
     
     if (term):
-        # Store best score if gained more points or if point are equal but randomness is lower
-        if (curr_score >= best_score[0]):
-            best_score = (curr_score, EPS)
-
+        scores[i] = curr_score
         curr_score = 0
         prev_obs, info = env.reset()
         EPS *= EPS
-        print("Episode terminated!")
+        print("Episode terminated! Starting " + str(i+1) + "th iteration...")
         print("New probability to make a random move: " + str(EPS))
     else:
         prev_obs = curr_obs
@@ -86,5 +84,10 @@ for _ in range(N_ITERATIONS):
     action = next_action_epsilon_greedy(q_table, curr_obs, EPS)
     print("Next action will be: " + ("L" if action==0 else "R"))
 
-print("Best score: " + str(best_score))
+# Show stats
+plt.plot(range(0, N_ITERATIONS), scores)
+plt.xlabel('Iteration')
+plt.ylabel('Cumulative Reward')
+plt.show()
+
 quit()
