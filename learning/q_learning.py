@@ -6,12 +6,10 @@ class QLearning:
     '''
         Off-Policy learning algorithm which computes and maximises the Q-value(s_t, a_t) for each state and action
         env - Gymnasium environment
-        n_iter - Number of iterations to perform
         alpha - Learning rate (0, 1). The higher the value, the more importance will be given to early episodes
         gamma - Discount factor (0, 1]. The higher the value, the more importance we give to rewards coming from long episodes (good start concept)
     '''
-    def __init__(self, n_iter, alpha, gamma):
-        self._n_iterations = n_iter
+    def __init__(self, alpha, gamma):
         self._alpha = alpha
         self._gamma = gamma
 
@@ -36,3 +34,6 @@ class QLearning:
         prev_q = (1-self._alpha)*prev_q + self._alpha*(reward + self._gamma*(max(curr_q))) 
         self._q_table[prev_state + (action,)] = prev_q
         return prev_q
+    
+    def decay_learning_rate(self, iter):
+        self._alpha = 1 / (9 + 0.1 * iter)
