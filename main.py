@@ -4,6 +4,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
+import os
 
 import math_utils as mu
 import learning.q_learning as qlearning
@@ -37,7 +38,7 @@ def plot_stats(n_iterations, scores, epsilons):
     plt.show()
 
 # Globals
-N_ITERATIONS = 10000        # Number of iterations (simulations)
+N_ITERATIONS = 5000        # Number of iterations (simulations)
 MAX_TIMESTEPS = 1000        # Maximum number of timesteps to be simulated during a single iteration
 ALPHA = 1                   # Learning rate, constant for first 1000 iterations
 ALPHA_DECAY_BASE = 0.997    # Starting value for alpha when decaying after the 1000th iteration
@@ -59,7 +60,8 @@ env = TransformObservation(env, lambda obs: (mu.round_to(obs[0], state_space_sca
 
 # Initialize learning algorithm
 learn = qlearning.QLearning(gamma=GAMMA, starting_alpha=ALPHA, decay_alpha=ALPHA_DECAY_BASE, start_decay_iter=500)
-learn.InitQTable(state_space_shape=state_space_shape, state_space_scale=state_space_scale, action_space=env.action_space)
+learn.init_q_table(state_space_shape=state_space_shape, state_space_scale=state_space_scale, action_space=env.action_space)
+# learn.load(os.getcwd() + "/tables/cart_q_table.json")
 
 # Initialize policy
 policy = ep.EpsilonGreedyPolicy(action_space = env.action_space, starting_eps = EPS, decay_eps = EPS_DECAY_BASE, start_decay_iter=500)
@@ -114,4 +116,5 @@ for iter in range(1, N_ITERATIONS+1):
     action = policy.next_action(learn._q_table, curr_obs)
 
 plot_stats(N_ITERATIONS, scores, epsilons)
+#learn.save(os.getcwd() + "/tables/cart_q_table.json")
 quit()
