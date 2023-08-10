@@ -10,7 +10,7 @@ import learning.q_learning as qlearning
 import policies.epsilon_greedy as ep
 
 # Globals
-N_ITERATIONS = 4000         # Number of iterations (simulations)
+N_ITERATIONS = 10000        # Number of iterations (simulations)
 MAX_TIMESTEPS = 1000        # Maximum number of timesteps to be simulated during a single iteration
 ALPHA = 1                   # Learning rate, constant for first 1000 iterations
 ALPHA_DECAY_BASE = 0.997    # Starting value for alpha when decaying after the 1000th iteration
@@ -49,7 +49,7 @@ for iter in range(1, N_ITERATIONS+1):
     curr_score = 0
 
     for t in range(MAX_TIMESTEPS):
-        if (iter % 2000 == 0):
+        if (iter % 5000 == 0):
             img = cv2.cvtColor(env.render(), cv2.COLOR_RGB2BGR)
             cv2.imshow("Iteration " + str(iter), img)
             cv2.waitKey(50)
@@ -89,11 +89,17 @@ for iter in range(1, N_ITERATIONS+1):
 # Show stats
 fig, ax1 = plt.subplots()
 
+# Cumulative rewards
 color = 'tab:blue'
 ax1.set_xlabel('Iteration')
 ax1.set_ylabel('Cumulative Reward')
 ax1.plot(range(0, N_ITERATIONS), scores,  color)
-ax1.plot(range(0, N_ITERATIONS), [0] + [np.mean(scores[:i]) for i in range(1, N_ITERATIONS)], 'tab:red')
+
+# Avg score line
+mean_win = 100
+result = np.append(np.zeros(mean_win), scores)
+result = [np.mean(scores[i-mean_win:i]) for i in range(mean_win, N_ITERATIONS+mean_win)]
+ax1.plot(range(0, N_ITERATIONS), result, 'tab:red')
 ax1.tick_params(axis='y')
 
 ax2 = ax1.twinx()
