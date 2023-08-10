@@ -7,9 +7,10 @@ class QLearning:
         alpha - Learning rate (0, 1). The higher the value, the more importance will be given to early episodes
         gamma - Discount factor (0, 1]. The higher the value, the more importance we give to rewards coming from long episodes (good start concept)
     '''
-    def __init__(self, alpha, gamma):
-        self._start_alpha = alpha
-        self._alpha = alpha
+    def __init__(self, gamma, starting_alpha, decay_alpha, start_decay_iter=0):
+        self._alpha = starting_alpha
+        self._decay_alpha = decay_alpha
+        self._start_decay_iter = start_decay_iter
         self._gamma = gamma
 
     '''
@@ -35,4 +36,5 @@ class QLearning:
         return prev_q
     
     def decay_learning_rate(self, iter):
-        self._alpha = pow(self._start_alpha, iter)
+        if (self._alpha > 0.01 and iter > self._start_decay_iter):
+            self._alpha = pow(self._decay_alpha, iter - self._start_decay_iter)
