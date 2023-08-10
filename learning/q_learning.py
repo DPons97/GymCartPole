@@ -1,6 +1,4 @@
-import numpy as np
-
-import learning.scaled_ndarray as sa
+import learning.q_table as qt
 
 class QLearning:
     '''
@@ -10,6 +8,7 @@ class QLearning:
         gamma - Discount factor (0, 1]. The higher the value, the more importance we give to rewards coming from long episodes (good start concept)
     '''
     def __init__(self, alpha, gamma):
+        self._start_alpha = alpha
         self._alpha = alpha
         self._gamma = gamma
 
@@ -22,7 +21,7 @@ class QLearning:
     def InitQTable(self, state_space_shape, state_space_scale, action_space):
         self._state_space_shape = state_space_shape
         self._state_space_scale = state_space_scale
-        self._q_table = sa.ScaledNDArray(state_space_shape + (action_space.n,), state_space_scale + (1,))
+        self._q_table = qt.QTable(state_space_shape + (action_space.n,), state_space_scale + (1,))
 
     '''
         Update the Q_value(s, a) related to the last executed action starting from the previous state
@@ -36,4 +35,4 @@ class QLearning:
         return prev_q
     
     def decay_learning_rate(self, iter):
-        self._alpha = 1 / (9 + 0.1 * iter)
+        self._alpha = pow(self._start_alpha, iter)
