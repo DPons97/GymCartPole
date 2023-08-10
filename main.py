@@ -9,6 +9,33 @@ import math_utils as mu
 import learning.q_learning as qlearning
 import policies.epsilon_greedy as ep
 
+def plot_stats(n_iterations, scores, epsilons):
+    # Show stats
+    fig, ax1 = plt.subplots()
+
+    # Cumulative rewards
+    color = 'tab:blue'
+    ax1.set_xlabel('Iteration')
+    ax1.set_ylabel('Cumulative Reward')
+    ax1.plot(range(0, n_iterations), scores,  color)
+
+    # Avg score line
+    mean_win = 100
+    means = np.append(np.zeros(mean_win), scores)
+    means = [np.mean(scores[i-mean_win:i]) for i in range(mean_win, n_iterations+mean_win)]
+    ax1.plot(range(0, n_iterations), means, 'tab:red')
+    ax1.tick_params(axis='y')
+
+    ax2 = ax1.twinx()
+
+    color = 'tab:purple'
+    ax2.set_ylabel('Randomness (%)')
+    ax2.plot(range(0, n_iterations), epsilons, color)
+    ax2.tick_params(axis='y')
+
+    fig.tight_layout()
+    plt.show()
+
 # Globals
 N_ITERATIONS = 10000        # Number of iterations (simulations)
 MAX_TIMESTEPS = 1000        # Maximum number of timesteps to be simulated during a single iteration
@@ -86,30 +113,5 @@ for iter in range(1, N_ITERATIONS+1):
     prev_obs, info = env.reset()
     action = policy.next_action(learn._q_table, curr_obs)
 
-# Show stats
-fig, ax1 = plt.subplots()
-
-# Cumulative rewards
-color = 'tab:blue'
-ax1.set_xlabel('Iteration')
-ax1.set_ylabel('Cumulative Reward')
-ax1.plot(range(0, N_ITERATIONS), scores,  color)
-
-# Avg score line
-mean_win = 100
-result = np.append(np.zeros(mean_win), scores)
-result = [np.mean(scores[i-mean_win:i]) for i in range(mean_win, N_ITERATIONS+mean_win)]
-ax1.plot(range(0, N_ITERATIONS), result, 'tab:red')
-ax1.tick_params(axis='y')
-
-ax2 = ax1.twinx()
-
-color = 'tab:purple'
-ax2.set_ylabel('Randomness (%)')
-ax2.plot(range(0, N_ITERATIONS), epsilons, color)
-ax2.tick_params(axis='y')
-
-fig.tight_layout()
-plt.show()
-
+plot_stats(N_ITERATIONS, scores, epsilons)
 quit()
