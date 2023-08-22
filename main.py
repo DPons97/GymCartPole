@@ -4,7 +4,6 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import cv2
-import os
 
 import math_utils as mu
 import learning.q_learning as qlearning
@@ -38,13 +37,13 @@ def plot_stats(n_iterations, scores, epsilons):
     plt.show()
 
 # Globals
-N_ITERATIONS = 5000        # Number of iterations (simulations)
+N_ITERATIONS = 30000         # Number of iterations (simulations)
 MAX_TIMESTEPS = 1000        # Maximum number of timesteps to be simulated during a single iteration
 ALPHA = 1                   # Learning rate, constant for first 1000 iterations
 ALPHA_DECAY_BASE = 0.997    # Starting value for alpha when decaying after the 1000th iteration
 GAMMA = 0.95                # Discount factor
 EPS = 1                     # Epsilon-greedy starting randomness, constant for first 1000 iterations
-EPS_DECAY_BASE = 0.997      # Starting value for epsilon when decaying after the 1000th iteration
+EPS_DECAY_BASE = 0.9995    # Starting value for epsilon when decaying after the 1000th iteration
 
 # Initialize the environment
 env = gym.make("CartPole-v1", render_mode="rgb_array")
@@ -77,7 +76,8 @@ for iter in range(1, N_ITERATIONS+1):
     print("Starting " + str(iter) + "th iteration...")
     curr_score = 0
 
-    for t in range(MAX_TIMESTEPS):
+    term = False
+    while not term:
         if (iter % 5000 == 0):
             img = cv2.cvtColor(env.render(), cv2.COLOR_RGB2BGR)
             cv2.imshow("Iteration " + str(iter), img)
@@ -89,9 +89,6 @@ for iter in range(1, N_ITERATIONS+1):
         
         new_q_value = learn.update_q_value(prev_state=prev_obs, action=action, curr_state=curr_obs, reward=reward)
         print("New q value for " + str(prev_obs + (action,)) + " = " + str(new_q_value))
-
-        if (term):
-            break
         
         prev_obs = curr_obs
         action = policy.next_action(learn._q_table, curr_obs)
@@ -116,5 +113,8 @@ for iter in range(1, N_ITERATIONS+1):
     action = policy.next_action(learn._q_table, curr_obs)
 
 plot_stats(N_ITERATIONS, scores, epsilons)
-#learn.save(os.getcwd() + "/tables/cart_q_table.json")
+
+import os
+learn.save(os.getcwd() + "/tables/cart_q_table.json")
+
 quit()
