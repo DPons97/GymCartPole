@@ -7,10 +7,8 @@ class QLearning:
         alpha - Learning rate (0, 1). The higher the value, the more importance will be given to early episodes
         gamma - Discount factor (0, 1]. The higher the value, the more importance we give to rewards coming from long episodes (good start concept)
     '''
-    def __init__(self, gamma, starting_alpha, decay_alpha, start_decay_iter=0):
+    def __init__(self, gamma, starting_alpha):
         self._alpha = starting_alpha
-        self._decay_alpha = decay_alpha
-        self._start_decay_iter = start_decay_iter
         self._gamma = gamma
 
     '''
@@ -19,17 +17,16 @@ class QLearning:
         state_space_scale - Tuple representing the discretization intervals of the state space (must have same dimension of state_space_shape)
         action_space - Tuple containing available actions
     '''
-    def init_q_table(self, state_space_shape, state_space_scale, action_space):
+    def init_q_table(self, state_space_shape, action_space):
         self._state_space_shape = state_space_shape
-        self._state_space_scale = state_space_scale
-        self._q_table = qt.QTable(state_space_shape + (action_space.n,), state_space_scale + (1,))
+        self._q_table = qt.QTable(state_space_shape + (action_space.n,))
 
     '''
         Update the Q_value(s, a) related to the last executed action starting from the previous state
     '''
     def update_q_value(self, prev_state, action, curr_state, reward):    
         prev_q = self._q_table[prev_state + (action,)]        # Q-value to be updated
-        curr_q = self._q_table[curr_state]                    # (Q_value[L], Q_value[R])
+        curr_q = self._q_table[curr_state]                # (Q_value[L], Q_value[R])
 
         prev_q = (1-self._alpha)*prev_q + self._alpha*(reward + self._gamma*(max(curr_q))) 
         self._q_table[prev_state + (action,)] = prev_q
@@ -41,10 +38,6 @@ class QLearning:
     def load(self, path):
         loadedTable = qt.QTable.from_json_file(path)
         if (loadedTable != None):
-            self._q_table.from_json_file(path)
+            self._q_table = loadedTable
             return True
         return False
-    
-    def decay_learning_rate(self, iter):
-        if (self._alpha > 0.01 and iter > self._start_decay_iter):
-            self._alpha = pow(self._decay_alpha, iter - self._start_decay_iter)
